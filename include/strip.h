@@ -36,6 +36,7 @@ void strip_color(StripData_t *strip, uint8_t color[3]);
 void strip_colors(StripData_t *strip, uint8_t *colors);
 void strip_power(StripData_t *strip, uint8_t power);
 void strip_brightness(StripData_t *strip, uint8_t brightness);
+void strip_write(StripData_t *strip);
 
 /** Platform-specific init */
 void *ws2812_init(StripConfig_t *cfg);

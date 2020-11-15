@@ -1,7 +1,10 @@
 #include <fastmath.h>
+#include <string.h>
 #include "esp_log.h"
 
 #include "strip.h"
+
+#include "esp_timer.h"
 
 static const char *TAG = "[strip]";
 
@@ -30,7 +33,7 @@ void hsv2rgb(uint8_t *hsv, uint8_t *rgb) {
   rgb[2] = (uint8_t)(b*255);
 }
 
-static void strip_write(StripData_t *strip) {
+void strip_write(StripData_t *strip) {
   uint8_t rgb[3];
   if (strip->type == STRIP_RGB) {
     rgb[0] = strip->color[0];
@@ -66,8 +69,11 @@ void strip_color(StripData_t *strip, uint8_t color[3]) {
 }
 
 void strip_colors(StripData_t *strip, uint8_t *colors) {
+  float brightness = (float)(strip->brightness) / 255.0;
+
+  int64_t start = esp_timer_get_time();
   for (uint32_t i = 0; i < 3 * strip->size; i++) {
-    strip->leds[i] = colors[i];
+    strip->leds[i] = (uint8_t)((float)(colors[i]) * brightness);
   }
   ws2812_write(strip, strip->leds);
 }
@@ -99,6 +105,7 @@ StripData_t *strip_init(StripConfig_t *cfg) {
   strip->ctx = ctx;
 
   strip_write(strip);
+  ESP_LOGI(TAG, "initialized");
 
   return strip;
 }
