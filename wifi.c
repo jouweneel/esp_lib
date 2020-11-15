@@ -60,17 +60,17 @@ void wifi_start() {
   ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
 
 #if defined WIFI_MODE_AP
-  ESP_LOGI(TAG, "Starting AP \"%s\"", WIFI_SSID);
+  ESP_LOGI(TAG, "Starting AP \"%s\"", CONFIG.WIFI_SSID);
 
   wifi_config_t wifi_config = {};
-  wifi_config.ap.ssid_len = strlen(WIFI_SSID);
+  wifi_config.ap.ssid_len = strlen(CONFIG.WIFI_SSID);
   wifi_config.ap.max_connection = WIFI_AP_MAX_CONNECTIONS;
   wifi_config.ap.authmode = WIFI_AUTH_WPA_WPA2_PSK;
-  strcpy((char *)wifi_config.ap.ssid, WIFI_SSID);
-  if (strlen(WIFI_PASS) == 0) {
+  strcpy((char *)wifi_config.ap.ssid, CONFIG.WIFI_SSID);
+  if (strlen(CONFIG.WIFI_PASS) == 0) {
     wifi_config.ap.authmode = WIFI_AUTH_OPEN;
   } else {
-    strcpy((char *)wifi_config.ap.password, WIFI_PASS);
+    strcpy((char *)wifi_config.ap.password, CONFIG.WIFI_PASS);
   }
 
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
@@ -78,12 +78,12 @@ void wifi_start() {
   ESP_ERROR_CHECK(esp_wifi_start());
 
 #else // WIFI_MODE_STA
-  ESP_LOGI(TAG, "Connecting to \"%s\"", WIFI_SSID);
+  // ESP_LOGI(TAG, "Connecting to \"%s\"", CONFIG.WIFI_SSID);
   ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
 
   wifi_config_t wifi_config = {};
-  strcpy((char *)wifi_config.sta.ssid, WIFI_SSID);
-  strcpy((char *)wifi_config.sta.password, WIFI_PASS);
+  strcpy((char *)wifi_config.sta.ssid, CONFIG.WIFI_SSID);
+  strcpy((char *)wifi_config.sta.password, CONFIG.WIFI_PASS);
 
   esp_netif_create_default_wifi_sta();
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
@@ -91,7 +91,7 @@ void wifi_start() {
 
   #if WIFI_WPA2 == 1
     ESP_ERROR_CHECK(esp_wifi_sta_wpa2_ent_set_username((uint8_t *)WIFI_WPA2_IDENTITY, strlen(WIFI_WPA2_IDENTITY)));
-    ESP_ERROR_CHECK(esp_wifi_sta_wpa2_ent_set_password((uint8_t *)WIFI_PASS, strlen(WIFI_PASS)));
+    ESP_ERROR_CHECK(esp_wifi_sta_wpa2_ent_set_password((uint8_t *)CONFIG.WIFI_PASS, strlen(CONFIG.WIFI_PASS)));
     ESP_ERROR_CHECK(esp_wifi_sta_wpa2_ent_set_ca_cert(NULL, 0));
     ESP_ERROR_CHECK(esp_wifi_sta_wpa2_ent_set_cert_key(NULL, 0, NULL, 0, NULL, 0));
     ESP_ERROR_CHECK(esp_wifi_sta_wpa2_ent_enable());
