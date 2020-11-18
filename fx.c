@@ -97,8 +97,10 @@ void start_fx(FxCfg_t *cfg) {
 
 void stop_fx(FxCfg_t *cfg) {
   strip_write(cfg->strip);
-  TaskHandle_t tmp = cfg->handle;
-  cfg->handle = NULL;
-  free(cfg->buf);
-  vTaskDelete(tmp);
+  if (cfg->handle != NULL) {
+    TaskHandle_t tmp = cfg->handle;
+    cfg->handle = NULL;
+    free(cfg->buf);
+    vTaskDelete(tmp);
+  }
 }
