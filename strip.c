@@ -63,14 +63,7 @@ void strip_write(StripData_t *strip) {
   uint8_t g = (strip->power == 0) ? 0 : (uint8_t)round(rgb[1] * brightness);
   uint8_t b = (strip->power == 0) ? 0 : (uint8_t)round(rgb[2] * brightness);
 
-  for (uint32_t i = 0; i < strip->size; i++) {
-    uint8_t offset = 3 * i;
-    strip->leds[offset] = r;
-    strip->leds[offset + 1] = g;
-    strip->leds[offset + 2] = b;
-  }
-
-  ws2812_write(strip, strip->leds);
+  ws2812_write_color(strip, r, g, b);
 }
 
 void strip_power(StripData_t *strip, uint8_t power) {
@@ -143,12 +136,8 @@ void strip_reset(StripData_t *strip) {
     strip_write(strip);  
     vTaskDelete(tmp);
   } else {
-    vTaskDelay(1);
     strip_write(strip);
   }
-
-  vTaskDelay(1);
-  strip_write(strip);
 }
 
 void strip_colors(StripData_t *strip, uint8_t *colors) {
@@ -183,6 +172,7 @@ StripData_t *strip_init(StripConfig_t *cfg) {
   void *ctx = ws2812_init(cfg);
 
   uint8_t *leds = (uint8_t *)malloc(3 * cfg->size);
+
   StripData_t *strip = (StripData_t *)malloc(sizeof(StripData_t));
   FxCfg_t *fx = (FxCfg_t *)malloc(sizeof(FxCfg_t));
   

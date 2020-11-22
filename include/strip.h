@@ -64,6 +64,7 @@ StripData_t *strip_init(StripConfig_t *cfg);
 /** Hardware-specific init, defined in platforms ws2812.c */
 void *ws2812_init(StripConfig_t *cfg);
 void ws2812_write(StripData_t *data, uint8_t *buf);
+void ws2812_write_color(StripData_t *strip, uint8_t r, uint8_t g, uint8_t b);
 
 #ifdef __cplusplus
 }
