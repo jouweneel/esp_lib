@@ -68,12 +68,13 @@ void esp_init() {
   
   CONFIG.LED_PIN = nvs_read_u8("LED_PIN");
   CONFIG.STRIP_PIN = nvs_read_u8("STRIP_PIN");
+  CONFIG.INPUT_PIN = nvs_read_u8("INPUT_PIN");
   CONFIG.STRIP_PWR = nvs_read_u8("STRIP_PWR");
   CONFIG.STRIP_BRT = nvs_read_u8("STRIP_BRT");
-  CONFIG.STRIP_SIZE = nvs_read_u32("STRIP_SIZE");
   CONFIG.STRIP_H = nvs_read_u8("STRIP_H");
   CONFIG.STRIP_S = nvs_read_u8("STRIP_S");
   CONFIG.STRIP_V = nvs_read_u8("STRIP_V");
+  CONFIG.STRIP_SIZE = nvs_read_u32("STRIP_SIZE");
   
   nvs_close(storage_handle);
 }

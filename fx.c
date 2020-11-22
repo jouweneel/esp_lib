@@ -1,10 +1,7 @@
 #include <string.h>
 #include <math.h>
-#include "esp_log.h"
 
 #include "fx.h"
-
-static const char *TAG = "fx";
 
 float sineCalc(FxCfg_t *fxCfg, float idx, uint32_t step) {
   FxSineCfg_t *cfg = (FxSineCfg_t *)(fxCfg->calcCfg);
@@ -25,14 +22,15 @@ float fadeCalc(FxCfg_t *fxCfg, float idx, uint32_t step) {
   return start + (delta * step);
 }
 
-float (*calcFns[])(FxCfg_t *fxCfg, float idx, uint32_t step) = {
-  sineCalc, fadeCalc
-};
+// float (*calcFns[])(FxCfg_t *fxCfg, float idx, uint32_t step) = {
+//   sineCalc, fadeCalc
+// };
 
-void fx(void *fxCfg) {
-  FxCfg_t *cfg = (FxCfg_t *)fxCfg;
+static void fx(void *params) {
+  StripData_t *strip = (StripData_t *)params;
+  FxCfg_t *cfg = strip->fx;
   uint8_t *buf = cfg->buf;
-  uint32_t size = cfg->strip->size;
+  uint32_t size = strip->size;
 
   volatile uint32_t step = 0;
 
@@ -45,10 +43,8 @@ void fx(void *fxCfg) {
 
   while(cfg->steps ? step < cfg->steps : true) {
     for (uint32_t i = 0; i < size; i++) {
-      float idx = (float)i / (float)(size);
-
       uint8_t *buf_led = &(buf[3 * i]);
-      uint8_t *led = &((cfg->strip->leds)[3 * i]);
+      float idx = (float)i / (float)(size);
 
       if (cfg->channel < 3) {
         float res = (cfg->calcFn)(cfg, idx, step);
@@ -64,7 +60,9 @@ void fx(void *fxCfg) {
         cfg->channel = 3;
       }
 
-      if (cfg->type == STRIP_HSV) {
+      // Write out
+      uint8_t *led = &((strip->leds)[3 * i]);
+      if (strip->type == STRIP_HSV) {
         hsv2rgb(buf_led, led); 
       } else {
         led[0] = buf_led[0];
@@ -73,34 +71,18 @@ void fx(void *fxCfg) {
       }
     }
 
-    strip_colors(cfg->strip, cfg->strip->leds);
+    strip_colors(strip, strip->leds);
     step += 1;
 
     vTaskDelay(cfg->loopDelay);
   }
 
-  strip_write(cfg->strip);
-  TaskHandle_t tmp = cfg->handle;
-  cfg->handle = NULL;
-  free(cfg->buf);
-  vTaskDelete(tmp);
+  strip_reset(strip);
 }
 
-void start_fx(FxCfg_t *cfg) {
-  if (cfg->handle != NULL) {
-    vTaskDelete(cfg->handle);
-    free(cfg->buf);
+void start_fx(StripData_t *strip) {
+  if (strip->fx->handle != NULL) {
+    vTaskDelete(strip->fx->handle);
   }
-  cfg->buf = (uint8_t *)malloc(3 * cfg->strip->size);
-  xTaskCreatePinnedToCore(fx, "fx", 4096, (void *)cfg, 5, &(cfg->handle), 1);
-}
-
-void stop_fx(FxCfg_t *cfg) {
-  strip_write(cfg->strip);
-  if (cfg->handle != NULL) {
-    TaskHandle_t tmp = cfg->handle;
-    cfg->handle = NULL;
-    free(cfg->buf);
-    vTaskDelete(tmp);
-  }
+  xTaskCreatePinnedToCore(fx, "fx", 4096, (void *)strip, 5, &(strip->fx->handle), 1);
 }
