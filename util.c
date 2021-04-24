@@ -16,7 +16,7 @@ static GpioOutData_t *status_led = NULL;
 static TaskHandle_t status_blink_task_handle = NULL;
 static uint32_t *delays = NULL;
 
-static char * nvs_read_string(const char *key) {
+static char *nvs_read_string(const char *key) {
   size_t length = 0;
 
   esp_err_t err = nvs_get_str(storage_handle, key, NULL, &length);

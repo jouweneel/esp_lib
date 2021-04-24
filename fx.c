@@ -77,7 +77,10 @@ static void fx(void *params) {
     vTaskDelay(cfg->loopDelay);
   }
 
-  strip_reset(strip);
+  strip->fx->handle = NULL;
+  strip_write(strip);
+  
+  vTaskDelete(NULL);
 }
 
 void start_fx(StripData_t *strip) {

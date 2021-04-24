@@ -106,5 +106,4 @@ void wifi_start() {
     xSemaphoreTake(s_wifi_connecting, portMAX_DELAY);
     xSemaphoreGive(s_wifi_connecting);
   #endif
-
 }

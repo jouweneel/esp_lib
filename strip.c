@@ -68,7 +68,7 @@ void strip_write(StripData_t *strip) {
 
 void strip_power(StripData_t *strip, uint8_t power) {
   strip->power = power;
-  strip_write(strip);
+  strip_reset(strip);
 }
 
 void strip_fade_power(StripData_t *strip, uint8_t power) {
@@ -96,7 +96,9 @@ void strip_fade_power(StripData_t *strip, uint8_t power) {
 
 void strip_brightness(StripData_t *strip, uint8_t brightness) {
   strip->brightness = brightness;
-  strip_write(strip);
+  if (strip->fx->handle == NULL) {
+    strip_write(strip);
+  }
 }
 
 void strip_color(StripData_t *strip, uint8_t color[3]) {
@@ -104,7 +106,9 @@ void strip_color(StripData_t *strip, uint8_t color[3]) {
   strip->color[1] = color[1];
   strip->color[2] = color[2];
 
-  strip_write(strip);
+  if (strip->fx->handle == NULL) {
+    strip_write(strip);
+  }
 }
 
 void strip_fade_color(StripData_t *strip, uint8_t *target) {
@@ -121,23 +125,21 @@ void strip_fade_color(StripData_t *strip, uint8_t *target) {
   strip->fx->channel = 3;
   strip->fx->steps = 50;
 
-  start_fx(strip);
-
   strip->color[0] = target[0];
   strip->color[1] = target[1];
   strip->color[2] = target[2];
+
+  start_fx(strip);
 }
 
 void strip_reset(StripData_t *strip) {
-   if (strip->fx->handle != NULL) {
+  if (strip->fx->handle != NULL) {
     TaskHandle_t tmp = strip->fx->handle;
     strip->fx->handle = NULL;
-
-    strip_write(strip);  
     vTaskDelete(tmp);
-  } else {
-    strip_write(strip);
   }
+
+  strip_write(strip);
 }
 
 void strip_colors(StripData_t *strip, uint8_t *colors) {
