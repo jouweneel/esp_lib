@@ -7,8 +7,7 @@ static const char *TAG = "[gpio]";
 
 static void IRAM_ATTR input_handler(void * input_arg) {
   GpioInData_t *input = (GpioInData_t *)input_arg;
-  uint8_t value = gpio_get_level(input->pin);
-  xQueueSendToBackFromISR(input->queue, &value, NULL);
+  xTaskNotify(input->task, 0, 0);
   return;
 }
 
@@ -16,13 +15,13 @@ void input_task(void *pvParams) {
   GpioInData_t *input = (GpioInData_t *)pvParams;
 
   while(true) {
-    BaseType_t res = xQueueReceive(
-      input->queue, input->value, portMAX_DELAY
-    );
-    if (res == pdTRUE) {
-      input->callback((input->value)[0]);
+    ulTaskNotifyTake(1, portMAX_DELAY);
+    vTaskDelay(2);  // Debounce?
+    uint8_t value = 1 - gpio_get_level(input->pin);
+    if (value != input->value[0]) {
+      input->value[0] = value;
+      input->callback(value);
     }
-    vTaskDelay(1);
   }
 }
 
@@ -35,8 +34,8 @@ GpioInData_t *gpio_input(uint8_t pin, void (*callback)(uint8_t value)) {
 #endif
     .mode = GPIO_MODE_INPUT,
     .pin_bit_mask = ((1ULL << pin)),
-    .pull_down_en = 1,
-    .pull_up_en = 0
+    .pull_down_en = 0,
+    .pull_up_en = 1
   };
   esp_err_t res = gpio_config(&cfg);
   if (res != ESP_OK) {
@@ -48,14 +47,7 @@ GpioInData_t *gpio_input(uint8_t pin, void (*callback)(uint8_t value)) {
   input->callback = callback;
   sprintf(input->name, "gpio_in_%u", input->pin);
   input->pin = pin;
-  input->value[0] = gpio_get_level(input->pin);
-  input->queue = xQueueCreate(1, sizeof(uint8_t));
-
-  ESP_LOGI(TAG, "queue: %p", input->queue);
-  if (input->queue == NULL) {
-    free(input);
-    return NULL;
-  }
+  input->value[0] = 2;  // Invalid value -> forces update
 
 #if defined CONFIG_IDF_TARGET_ESP8266
   gpio_install_isr_service(0);
@@ -66,7 +58,7 @@ GpioInData_t *gpio_input(uint8_t pin, void (*callback)(uint8_t value)) {
   gpio_isr_handler_add(input->pin, input_handler, input);
 
   res = xTaskCreate(
-    input_task, input->name, 8192, (void *)input, 20, NULL
+    input_task, input->name, 8192, (void *)input, 20, &(input->task)
   );
   if (res != pdPASS) {
     free(input);

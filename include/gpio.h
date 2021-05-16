@@ -2,7 +2,7 @@
 #define _GPIO_H_
 
 #include "freertos/FreeRTOS.h"
-#include "freertos/queue.h"
+#include "freertos/task.h"
 
 #include "driver/gpio.h"
 
@@ -14,7 +14,7 @@ typedef struct GpioInData_t {
   void (*callback)(uint8_t value);
   char name[12];
   uint8_t pin;
-  QueueHandle_t queue;
+  TaskHandle_t task;
   uint8_t value[1];
 } GpioInData_t;
 
