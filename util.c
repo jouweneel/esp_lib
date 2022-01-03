@@ -20,7 +20,9 @@ static char *nvs_read_string(const char *key) {
   size_t length = 0;
 
   esp_err_t err = nvs_get_str(storage_handle, key, NULL, &length);
-  ESP_ERROR_CHECK(err);
+  if (err != ESP_OK) {
+    return NULL;
+  }
 
   char *target = (char *)malloc(length);
   err = nvs_get_str(storage_handle, key, target, &length);
@@ -33,7 +35,9 @@ static char *nvs_read_string(const char *key) {
 static uint8_t nvs_read_u8(const char *key) {
   uint8_t res = 0;
   esp_err_t err = nvs_get_u8(storage_handle, key, &res);
-  ESP_ERROR_CHECK(err);
+  if (err != ESP_OK) {
+    return 0;
+  }
 
   ESP_LOGI(TAG, "Key %s loaded: %u", key, res);
   return res;
@@ -42,8 +46,9 @@ static uint8_t nvs_read_u8(const char *key) {
 static uint32_t nvs_read_u32(const char *key) {
   uint32_t res = 0;
   esp_err_t err = nvs_get_u32(storage_handle, key, &res);
-  ESP_ERROR_CHECK(err);
-
+  if (err != ESP_OK) {
+    return 0;
+  }
   ESP_LOGI(TAG, "Key %s loaded: %u", key, res);
   return res;
 }
@@ -75,6 +80,8 @@ void esp_init() {
   CONFIG.STRIP_S = nvs_read_u8("STRIP_S");
   CONFIG.STRIP_V = nvs_read_u8("STRIP_V");
   CONFIG.STRIP_SIZE = nvs_read_u32("STRIP_SIZE");
+  CONFIG.TH_SCL_PIN = nvs_read_u8("TH_SCL_PIN");
+  CONFIG.TH_SDA_PIN = nvs_read_u8("TH_SDA_PIN");
   
   nvs_close(storage_handle);
 }
