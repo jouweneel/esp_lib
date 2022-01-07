@@ -16,8 +16,8 @@ void input_task(void *pvParams) {
 
   while(true) {
     ulTaskNotifyTake(1, portMAX_DELAY);
-    vTaskDelay(2);  // Debounce?
-    uint8_t value = 1 - gpio_get_level(input->pin);
+    // vTaskDelay(2);  // Debounce?
+    uint8_t value = gpio_get_level(input->pin);
     if (value != input->value[0]) {
       input->value[0] = value;
       input->callback(value);
