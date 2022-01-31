@@ -78,7 +78,9 @@ void esp_init() {
   CONFIG.STRIP_BRT = nvs_read_u8("STRIP_BRT");
   CONFIG.STRIP_H = nvs_read_u8("STRIP_H");
   CONFIG.STRIP_S = nvs_read_u8("STRIP_S");
-  CONFIG.STRIP_V = nvs_read_u8("STRIP_V");
+  // @TODO reflash config or make remotely configurable
+  // CONFIG.STRIP_V = nvs_read_u8("STRIP_V");
+  CONFIG.STRIP_V = 255;
   CONFIG.STRIP_SIZE = nvs_read_u32("STRIP_SIZE");
   CONFIG.TH_SCL_PIN = nvs_read_u8("TH_SCL_PIN");
   CONFIG.TH_SDA_PIN = nvs_read_u8("TH_SDA_PIN");
