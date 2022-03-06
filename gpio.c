@@ -4,14 +4,57 @@
 #include "freertos/task.h"
 
 static const char *TAG = "[gpio]";
+static const int SAMPLES = 64;
 
-static void IRAM_ATTR input_handler(void * input_arg) {
+void analog_task(void *pvParams) {
+  AnalogInData_t *input = (AnalogInData_t *)pvParams;
+  input->value = 0;
+
+  while(true) {
+    uint32_t total = 0;
+    for (int i=  0; i < SAMPLES; i++) {
+      total += adc1_get_raw(input->channel);
+    }
+
+    int value = total >> 6;
+    if (value != input->value) {
+      input->value = value;
+      input->callback(value);
+   }
+
+    vTaskDelay(6000);
+  }
+}
+
+AnalogInData_t *analog_input(
+  adc1_channel_t channel, void (*callback)(int value)
+) {
+  ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_12Bit));
+  ESP_ERROR_CHECK(adc1_config_channel_atten(channel, ADC_ATTEN_0db));
+  
+  AnalogInData_t *input = (AnalogInData_t *)malloc(sizeof(AnalogInData_t));
+
+  input->callback = callback;
+  input->channel = channel;
+  sprintf(input->name, "analog_in_%u", channel);
+
+  ESP_LOGI(TAG, "%s initialized", input->name);
+
+  xTaskCreate(
+    analog_task, input->name, 4096, (void *)input, 20, NULL
+  );
+
+  return input;
+}
+
+/** Digital i/o **/
+static void IRAM_ATTR d_input_handler(void * input_arg) {
   GpioInData_t *input = (GpioInData_t *)input_arg;
   xTaskNotify(input->task, 0, 0);
   return;
 }
 
-void input_task(void *pvParams) {
+void d_input_task(void *pvParams) {
   GpioInData_t *input = (GpioInData_t *)pvParams;
 
   while(true) {
@@ -55,10 +98,10 @@ GpioInData_t *gpio_input(uint8_t pin, void (*callback)(uint8_t value)) {
   gpio_install_isr_service(ESP_INTR_FLAG_EDGE);
 #endif
 
-  gpio_isr_handler_add(input->pin, input_handler, input);
+  gpio_isr_handler_add(input->pin, d_input_handler, input);
 
   res = xTaskCreate(
-    input_task, input->name, 8192, (void *)input, 20, &(input->task)
+    d_input_task, input->name, 4096, (void *)input, 20, &(input->task)
   );
   if (res != pdPASS) {
     free(input);

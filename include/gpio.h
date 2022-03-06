@@ -3,12 +3,20 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "driver/adc.h"
 
 #include "driver/gpio.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct AnalogInData_t {
+  void (*callback)(int value);
+  char name[12];
+  adc1_channel_t channel;
+  int value;
+} AnalogInData_t;
 
 typedef struct GpioInData_t {
   void (*callback)(uint8_t value);
@@ -23,6 +31,7 @@ typedef struct GpioOutData_t {
   uint8_t value;
 } GpioOutData_t;
 
+AnalogInData_t *analog_input(adc1_channel_t channel, void (*callback)(int value));
 GpioInData_t *gpio_input(uint8_t pin, void (*callback)(uint8_t value));
 GpioOutData_t *gpio_output(uint8_t pin, uint8_t value);
 

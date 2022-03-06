@@ -71,6 +71,7 @@ void esp_init() {
   CONFIG.OTA_URL = nvs_read_string("OTA_URL");
   CONFIG.MQTT_URL = nvs_read_string("MQTT_URL");
   
+  CONFIG.ADC_CHANNEL = nvs_read_u8("ADC_CHANNEL");
   CONFIG.LED_PIN = nvs_read_u8("LED_PIN");
   CONFIG.STRIP_PIN = nvs_read_u8("STRIP_PIN");
   CONFIG.INPUT_PIN = nvs_read_u8("INPUT_PIN");
