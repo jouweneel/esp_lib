@@ -16,13 +16,14 @@ void analog_task(void *pvParams) {
       total += adc1_get_raw(input->channel);
     }
 
-    int value = total >> 6;
+    int value = total >> 10;
+
     if (value != input->value) {
       input->value = value;
       input->callback(value);
-   }
+    }
 
-    vTaskDelay(6000);
+    vTaskDelay(60 * 100); // 100 = 1s
   }
 }
 
@@ -30,7 +31,7 @@ AnalogInData_t *analog_input(
   adc1_channel_t channel, void (*callback)(int value)
 ) {
   ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_12Bit));
-  ESP_ERROR_CHECK(adc1_config_channel_atten(channel, ADC_ATTEN_0db));
+  ESP_ERROR_CHECK(adc1_config_channel_atten(channel, ADC_ATTEN_11db));
   
   AnalogInData_t *input = (AnalogInData_t *)malloc(sizeof(AnalogInData_t));
 
@@ -59,9 +60,10 @@ void d_input_task(void *pvParams) {
 
   while(true) {
     ulTaskNotifyTake(1, portMAX_DELAY);
-    // vTaskDelay(2);  // Debounce?
     uint8_t value = gpio_get_level(input->pin);
+
     if (value != input->value[0]) {
+      // ESP_LOGI(TAG, "GPIO: %i", value);
       input->value[0] = value;
       input->callback(value);
     }
